@@ -9,16 +9,19 @@ import (
 	"time"
 
 	randomdata "github.com/Pallinder/go-randomdata"
-	"github.com/jonfriesen/subscriber-tracker-api/model"
-	"github.com/jonfriesen/subscriber-tracker-api/storage/postgresql"
+	"github.com/jonfriesen/subscriber-tracker-worker/model"
+	"github.com/jonfriesen/subscriber-tracker-worker/storage/postgresql"
 )
 
 var (
-	DatabaseURL = "postgresql://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable"
+	DatabaseURLDefault = "postgresql://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable"
 )
 
 func main() {
-	DatabaseURL = os.Getenv("DATABASE_URL")
+	DatabaseURL := os.Getenv("DATABASE_URL")
+	if DatabaseURL == "" {
+		DatabaseURL = DatabaseURLDefault
+	}
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
@@ -37,24 +40,31 @@ func main() {
 	go func() {
 		var adb *postgresql.PostgreSQL
 		err := errors.New("database is not ready yet")
+		log.Println("Checking if database is ready yet.")
 		for err != nil {
-			log.Println("Checking if database is ready yet.")
 			adb, err = postgresql.NewConnection(DatabaseURL)
 			if err != nil {
-				time.Sleep(5 * time.Second)
+				log.Println("...no database found yet")
+				err = err
+				time.Sleep(2 * time.Second)
+			} else {
+				log.Println("Found DB!")
+				adb = adb
+				break
 			}
 		}
 
 		for {
-
-			_, err := adb.AddSubscriber(model.Subscriber{
+			newSub := &model.Subscriber{
 				Name:  randomdata.FullName(randomdata.RandomGender),
 				Email: randomdata.Email(),
-			})
+			}
+			_, err := adb.AddSubscriber(newSub)
+			log.Printf("Added: %s <%s>", newSub.Name, newSub.Email)
 			if err != nil {
 				log.Printf("Error occurred, ignoring: %s", err.Error())
 			}
-			time.Sleep(2 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 	}()
 
