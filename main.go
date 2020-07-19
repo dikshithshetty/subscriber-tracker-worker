@@ -1,8 +1,10 @@
 package main
 
 import (
-	"errors"
+	"bytes"
+	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,17 +12,15 @@ import (
 
 	randomdata "github.com/Pallinder/go-randomdata"
 	"github.com/jonfriesen/subscriber-tracker-worker/model"
-	"github.com/jonfriesen/subscriber-tracker-worker/storage/postgresql"
 )
 
-var (
-	DatabaseURLDefault = "postgresql://postgres:mysecretpassword@localhost:5432/postgres?sslmode=disable"
-)
+var apiPath = "http://localhost:8080"
 
 func main() {
-	DatabaseURL := os.Getenv("DATABASE_URL")
-	if DatabaseURL == "" {
-		DatabaseURL = DatabaseURLDefault
+	isDev := os.Getenv("CNB_PROCESS_TYPE")
+
+	if isDev != "" {
+		apiPath = "/api"
 	}
 
 	wg := new(sync.WaitGroup)
@@ -38,33 +38,22 @@ func main() {
 	}()
 
 	go func() {
-		var adb *postgresql.PostgreSQL
-		err := errors.New("database is not ready yet")
-		log.Println("Checking if database is ready yet.")
-		for err != nil {
-			adb, err = postgresql.NewConnection(DatabaseURL)
-			if err != nil {
-				log.Println("...no database found yet")
-				err = err
-				time.Sleep(2 * time.Second)
-			} else {
-				log.Println("Found DB!")
-				adb = adb
-				break
-			}
-		}
 
 		for {
 			newSub := &model.Subscriber{
 				Name:  randomdata.FullName(randomdata.RandomGender),
 				Email: randomdata.Email(),
 			}
-			_, err := adb.AddSubscriber(newSub)
-			log.Printf("Added: %s <%s>", newSub.Name, newSub.Email)
+			newSubB, err := json.Marshal(newSub)
 			if err != nil {
-				log.Printf("Error occurred, ignoring: %s", err.Error())
+				log.Println("Error marshalling generated sub.")
 			}
-			time.Sleep(5 * time.Second)
+			_, err = http.Post(apiPath+"/subscribers/", "application/json", bytes.NewBuffer(newSubB))
+			if err != nil {
+				log.Printf("Error occurred, ignoring: %s\n", err.Error())
+			}
+			log.Printf("Added: %s <%s>", newSub.Name, newSub.Email)
+			time.Sleep(1 * time.Second)
 		}
 	}()
 
