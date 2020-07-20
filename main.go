@@ -17,8 +17,11 @@ import (
 var apiPath = "http://localhost:8080"
 
 func main() {
+	domain := os.Getenv("DOMAIN")
+	if domain != "" {
+		apiPath = domain
+	}
 	env := os.Getenv("ENVIRONMENT")
-
 	if env == "" || env == "production" {
 		apiPath = "/api"
 	}
