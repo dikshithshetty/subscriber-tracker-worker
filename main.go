@@ -17,9 +17,9 @@ import (
 var apiPath = "http://localhost:8080"
 
 func main() {
-	isDev := os.Getenv("CNB_PROCESS_TYPE")
+	env := os.Getenv("ENVIRONMENT")
 
-	if isDev != "" {
+	if env == "" || env == "production" {
 		apiPath = "/api"
 	}
 
