@@ -23,7 +23,7 @@ func main() {
 	}
 	env := os.Getenv("ENVIRONMENT")
 	if env == "" || env == "production" {
-		apiPath = "/api"
+		apiPath += "/api"
 	}
 
 	wg := new(sync.WaitGroup)
