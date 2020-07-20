@@ -51,6 +51,7 @@ func main() {
 			_, err = http.Post(apiPath+"/subscribers/", "application/json", bytes.NewBuffer(newSubB))
 			if err != nil {
 				log.Printf("Error occurred, ignoring: %s\n", err.Error())
+				time.Sleep(1 * time.Minute)
 			}
 			log.Printf("Added: %s <%s>", newSub.Name, newSub.Email)
 			time.Sleep(1 * time.Second)
