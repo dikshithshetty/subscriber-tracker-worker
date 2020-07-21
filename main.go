@@ -14,13 +14,23 @@ import (
 	"github.com/jonfriesen/subscriber-tracker-worker/model"
 )
 
-var apiPath = "http://localhost:8080"
+var (
+	apiPath      = "http://localhost:8080"
+	internalPath = "http://api"
+)
 
 func main() {
 	domain := os.Getenv("DOMAIN")
-	if domain != "" {
+	if domain == "" {
+		log.Println("Attempting to connect to internal api", internalPath)
+		resp, err := http.Get(internalPath)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			apiPath = internalPath
+		}
+	} else {
 		apiPath = domain
 	}
+
 	env := os.Getenv("ENVIRONMENT")
 	if env == "" || env == "production" {
 		apiPath += "/api"
