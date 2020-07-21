@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"os"
 	"os/signal"
 	"sync"
@@ -26,6 +27,11 @@ func main() {
 		resp, err := http.Get(internalPath)
 		if err == nil && resp.StatusCode == http.StatusOK {
 			log.Println("Internal Path Success", internalPath)
+			respByte, err := httputil.DumpResponse(resp, true)
+			if err != nil {
+				log.Println("Error dumping response", err.Error())
+			}
+			log.Println(string(respByte))
 			apiPath = internalPath
 		}
 	} else {
