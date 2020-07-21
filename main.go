@@ -68,12 +68,14 @@ func main() {
 			if err != nil {
 				log.Println("Error marshalling generated sub.")
 			}
-			_, err = http.Post(apiPath+"/subscribers/", "application/json", bytes.NewBuffer(newSubB))
+			hostPath := apiPath + "/subscribers/"
+
+			_, err = http.Post(hostPath, "application/json", bytes.NewBuffer(newSubB))
 			if err != nil {
 				log.Printf("Error occurred, ignoring: %s\n", err.Error())
 				time.Sleep(1 * time.Minute)
 			}
-			log.Printf("Added: %s <%s>", newSub.Name, newSub.Email)
+			log.Printf("%s @ Added: %s <%s>", hostPath, newSub.Name, newSub.Email)
 			time.Sleep(1 * time.Second)
 		}
 	}()
