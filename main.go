@@ -25,6 +25,7 @@ func main() {
 		log.Println("Attempting to connect to internal api", internalPath)
 		resp, err := http.Get(internalPath)
 		if err == nil && resp.StatusCode == http.StatusOK {
+			log.Println("Internal Path Success", internalPath)
 			apiPath = internalPath
 		}
 	} else {
