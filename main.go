@@ -36,11 +36,10 @@ func main() {
 		}
 	} else {
 		apiPath = domain
-	}
-
-	env := os.Getenv("ENVIRONMENT")
-	if env == "" || env == "production" {
-		apiPath += "/api"
+		env := os.Getenv("ENVIRONMENT")
+		if env == "" || env == "production" {
+			apiPath += "/api"
+		}
 	}
 
 	wg := new(sync.WaitGroup)
